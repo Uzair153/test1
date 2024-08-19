@@ -1,0 +1,33 @@
+name: Push Docker Image to ECR
+
+on:
+  push:
+    branches:
+      - main  # Adjust the branch as needed
+
+jobs:
+  push-to-ecr:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Amazon ECR
+        env:
+          AWS_REGION: us-east-2
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin 891377137882.dkr.ecr.$AWS_REGION.amazonaws.com
+
+      - name: Pull Docker image from Docker Hub
+        run: |
+          docker pull nginx:latest
+
+      - name: Tag Docker image for ECR
+        run: |
+          docker tag nginx:latest 891377137882.dkr.ecr.us-east-2.amazonaws.com/testing:latest
+
+      - name: Push Docker image to ECR
+        run: |
+          docker push 891377137882.dkr.ecr.us-east-2.amazonaws.com/testing:latest
